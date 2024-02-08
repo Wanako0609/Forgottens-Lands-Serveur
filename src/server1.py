@@ -1,6 +1,7 @@
 import pickle
 import socket
 import threading
+import time
 from _thread import *
 from player import Player
 from queuerecv import QueueRecv
@@ -17,6 +18,7 @@ except socket.error as e:
 
 s.listen()
 print("Serveur sur écoute")
+
 players = []  # Listes des joueurs
 
 
@@ -26,36 +28,40 @@ def send_data(conn, label: str, data):
     conn.send(pickle.dumps(labeled_data))
 
 
-def threaded_client(conn):
+def connection(conn):
     # First message recoit l'uuid
-    uuid = conn.recv(2048).decode()
+
+    data = pickle.loads(conn.recv(2048))# Recv connection
+    if data["label"] == "connection":
+        uuid = data["data"]
+    # uuid = conn.recv(2048).decode()
     # print("uuid " + uuid)
 
     # Crée le joueur coté serveur
     player = Player(uuid)
     # ajout des joueurs dans la liste des joueurs connecté
     players.append(player)
-    print(player.get_stat())
+    # print(player.get_stat())
 
-    # Envoie les players data du joueur courrant
-    conn.send(pickle.dumps(player.get_stat()))
+    # Envoie le ok
+    send_data(conn, label="connection", data=player.get_stat())
+
+    return player
+
+
+def threaded_client(conn):
+    player = connection(conn)
 
     # Queue
     queue = QueueRecv(conn)
+    queue.start_thread()
+
+    print("running")
 
     while True:
-        try:
+        if not queue.queue.empty():
+            data = queue.queue.get()
 
-            # Envoie des players actuellement connecté
-            # print(f"Il y a {nb_players} joueurs co et type {type(nb_players)}")
-
-            # Envoie la liste des joueurs connecté avec leurs informations imperative pour le jeux et pas le reste
-
-
-            # Gestion des méthodes côté client
-            data = queue.get_queue().get(block=False)
-
-            # GESTION ACTUALISATION JOUEUR (Send ) #############################
             if data["label"] == "update_request":
                 request = data["data"]
 
@@ -69,35 +75,12 @@ def threaded_client(conn):
                     send_data(conn, label="nb_players", data=nb_players)
 
                 elif request == "other_players":
+                    print("other_players")
                     for other_player in players:
                         other_player_data = other_player.get_stat()
                         send_data(conn, label="other_players", data=other_player_data)
-                else:
-                    print("Mauvais format request")
-                    print(request)
 
-            # GESTION METHODES (recv) #############################
-            # Move
-            elif data["label"] == "player_move":
-                player_move = data["data"]
-                player.move(player_move)
 
-            # Action Color
-            elif data["label"] == "action":
-                action = data["data"]
-                if action == "color":
-                    player.change_color()
-
-        except Exception as e:
-            print(e)
-            for player in players:
-                if player.uuid == uuid:
-                    players.remove(player)
-                    break
-
-            print("Player deconnecter")
-            conn.close()
-            break
 
 
 while True:

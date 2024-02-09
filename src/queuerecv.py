@@ -27,14 +27,15 @@ class QueueRecv:
     def stop_thread(self):
         self.running = False
         self.recv_thread.join()
+        print("Thread stop")
 
     def recv_thread_method(self):
         while self.running:
             try:
                 data_recv = self.server.recv(2048)
-                # print(data_recv)
+                #print(data_recv)
                 data = pickle.loads(data_recv)  # pickle.loads() recompose l'object
-                print(data)
+                #print(data)
                 # Mettez les données dans la file pour que le thread principal les récupère
                 self.queue.put(data)
 

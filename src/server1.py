@@ -59,28 +59,59 @@ def threaded_client(conn):
     print("running")
 
     while True:
-        if not queue.queue.empty():
-            data = queue.queue.get()
+        try:
+            # Actualisation du jeux
+            time.sleep(0.005)
+            # Player Data
+            player_data = player.get_stat()
+            send_data(conn, label="player_data", data=player_data)
+            # Nb Player
+            nb_players = str(len(players))
+            send_data(conn, label="nb_players", data=nb_players)
 
-            if data["label"] == "update_request":
-                request = data["data"]
-
-                if request == "player_data":
-                    # Envoie les players data du joueur courrant
-                    player_data = player.get_stat()
-                    send_data(conn, label="player_data", data=player_data)
-
-                elif request == "nb_players":
-                    nb_players = str(len(players))
-                    send_data(conn, label="nb_players", data=nb_players)
-
-                elif request == "other_players":
-                    print("other_players")
-                    for other_player in players:
-                        other_player_data = other_player.get_stat()
-                        send_data(conn, label="other_players", data=other_player_data)
+            # Other Player Data
+            send_data(conn, label="other_players_start", data="start")
+            for other_player in players:
+                other_player_data = other_player.get_stat()
+                send_data(conn, label="other_players", data=other_player_data)
+            send_data(conn, label="other_players_end", data="ok")
 
 
+            # Reponse a request
+            if not queue.queue.empty():
+                data = queue.queue.get()
+                print(data)
+
+                if data["label"] == "update_request":
+                    request = data["data"]
+
+                    if request == "player_data":
+                        # Envoie les players data du joueur courrant
+                        player_data = player.get_stat()
+                        send_data(conn, label="player_data", data=player_data)
+
+                    elif request == "nb_players":
+                        nb_players = str(len(players))
+                        send_data(conn, label="nb_players", data=nb_players)
+
+                    elif request == "other_players":
+                        send_data(conn, label="other_players_start", data="start")
+                        for other_player in players:
+                            other_player_data = other_player.get_stat()
+                            send_data(conn, label="other_players", data=other_player_data)
+                        send_data(conn, label="other_players_end", data="ok")
+        except Exception as e:
+            print(e)
+            for player in players:
+                if player.uuid == player.uuid:
+                    players.remove(player)
+                    break
+
+            print("Player deconnecter")
+            conn.close()
+            break
+
+    assert False, "Connection Perdu"
 
 
 while True:

@@ -5,7 +5,7 @@ from _thread import *
 import pygame
 
 from player import Player
-
+# Go to UPD
 server = "127.0.0.1"
 port = 5555
 

@@ -1,6 +1,5 @@
 import pygame
-
-import playerdata
+import src.entities.playerdata as playerdata
 
 
 class Player(playerdata.Playerdata):

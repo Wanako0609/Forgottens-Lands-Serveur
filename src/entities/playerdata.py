@@ -1,6 +1,6 @@
 import os
 import json
-import player
+import src.entities.player as player
 
 
 def create_stats():
@@ -45,8 +45,9 @@ class Playerdata:
     # A utilisé avec les vrai joueurs
     def get_stat(self):
         # Charger les statistiques depuis le fichier JSON
-        fichier_json_stats = f"../data/playerdata/{self.uuid}.json"
+        fichier_json_stats = f"src/data/playerdata/{self.uuid}.json"
         #print("file " + fichier_json_stats)
+        #print(os.getcwd())
         with open(fichier_json_stats, 'r') as fichier_stats:
             stats_joueur = json.load(fichier_stats)
         return stats_joueur
@@ -58,7 +59,7 @@ class Playerdata:
         return self.x, self.y
 
     def set_pos(self):
-        modifier_valeurs_json(f"../data/playerdata/{self.uuid}.json", {"x": self.x, "y": self.y})
+        modifier_valeurs_json(f"src/data/playerdata/{self.uuid}.json", {"x": self.x, "y": self.y})
 
     # Temporaire
     def get_color(self):
@@ -69,7 +70,7 @@ class Playerdata:
     # Temporaire
     def set_color(self, color):
         self.color = color
-        modifier_valeurs_json(f"../data/playerdata/{self.uuid}.json", {"color": color})
+        modifier_valeurs_json(f"src/data/playerdata/{self.uuid}.json", {"color": color})
 
 
 
